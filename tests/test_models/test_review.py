@@ -1,81 +1,70 @@
-#!/usr/bin/python3
-
-'''
-    All the test for the user model are implemented here.
-'''
-
 import unittest
-import pep8
-from models.base_model import BaseModel
-from models.review import Review
-from os import getenv, remove
-
-storage = getenv("HBNB_TYPE_STORAGE", "fs")
+from datetime import datetime
+from models import *
 
 
-class TestReview(unittest.TestCase):
-    '''
-        Testing Review class
-    '''
+class Test_ReviewModel(unittest.TestCase):
+    """
+    Test the review model class
+    """
 
-    @classmethod
-    def setUpClass(cls):
-        '''
-            Sets up unittest
-        '''
-        cls.rev = Review()
-        cls.rev.user_id = "Adriel and Melissa 123"
-        cls.rev.place_id = "Amy and Victor's room at SF"
-        cls.rev.text = "Team Awesome includes Adekunle"
+    def test_initialization_no_arg(self):
+        """test simple initialization with no arguments"""
+        model = Review()
+        self.assertTrue(hasattr(model, "place_id"))
+        self.assertTrue(hasattr(model, "user_id"))
+        self.assertTrue(hasattr(model, "text"))
+        self.assertTrue(hasattr(model, "id"))
+        self.assertTrue(hasattr(model, "created_at"))
 
-    @classmethod
-    def tearDownClass(cls):
-        '''
-            Tears down unittest
-        '''
-        del cls.rev
-        try:
-            remove("file.json")
-        except FileNotFoundError:
-            pass
+    def test_var_initialization(self):
+        """Check default type"""
+        model = Review()
+        self.assertIsInstance(model.created_at, datetime)
 
-    def test_pep8_style_check(self):
-        '''
-            Tests pep8 style
-        '''
-        style = pep8.StyleGuide(quiet=True)
-        p = style.check_files(['models/review.py'])
-        self.assertEqual(p.total_errors, 0, "pep8 error needs fixing")
+    def test_save(self):
+        """saving the object to storage"""
+        test_user = {'id': "004",
+                     'email': "you@g.com",
+                     'password': "1234",
+                     'first_name': "TEST",
+                     'last_name': "REVIEW"}
+        user = User(test_user)
+        test_state = {'id': "004",
+                      'created_at': datetime(2017, 2, 12, 00, 31, 55, 331997),
+                      'name': "TEST STATE FOR CITY"}
+        state = State(test_state)
+        test_city = {'id': "007",
+                     'name': "CITY SET UP",
+                     'state_id': "004"}
+        city = City(test_city)
+        test_place = {'id': "005",
+                      'city_id': "007",
+                      'user_id': "004",
+                      'name': "TEST REVIEW",
+                      'description': "blah blah",
+                      'number_rooms': 4,
+                      'number_bathrooms': 2,
+                      'max_guest': 4,
+                      'price_by_night': 23,
+                      'latitude': 45.5,
+                      'longitude': 23.4}
+        place = Place(test_place)
+        test_review = {'text': "a text",
+                       'place_id': "005",
+                       'user_id': "004"}
+        review = Review(test_review)
+        user.save()
+        state.save()
+        city.save()
+        place.save()
+        review.save()
+        storage.delete(review)
+        storage.delete(place)
+        # storage.delete(city) cascade deletes it
+        storage.delete(user)
+        storage.delete(state)
 
-    def test_Review_dbtable(self):
-        '''
-            Check if the tablename is correct
-        '''
-        self.assertEqual(self.rev.__tablename__, "reviews")
 
-    def test_Review_inheritance(self):
-        '''
-            Tests that the Review class Inherits from BaseModel
-        '''
-        self.assertIsInstance(self.rev, BaseModel)
-
-    def test_Review_attributes(self):
-        '''
-            Tests Review class has place_id, user_id and text attributes
-        '''
-        self.assertTrue("place_id" in self.rev.__dir__())
-        self.assertTrue("user_id" in self.rev.__dir__())
-        self.assertTrue("text" in self.rev.__dir__())
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_Review_attributes(self):
-        '''
-            Test that Review class has place_id, user_id and text
-            attributes.
-        '''
-        place_id = getattr(self.rev, "place_id")
-        user_id = getattr(self.rev, "user_id")
-        text = getattr(self.rev, "text")
-        self.assertIsInstance(place_id, str)
-        self.assertIsInstance(user_id, str)
-        self.assertIsInstance(text, str)
+if __name__ == "__main__":
+    unittest.main()

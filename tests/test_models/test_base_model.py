@@ -1,179 +1,60 @@
-#!/usr/bin/python3
-
-'''
-    All the test for the base_model are implemented here.
-'''
-
 import unittest
-import sys
-import datetime
-from models.base_model import BaseModel
-from io import StringIO
-from os import getenv
-
-storage = getenv("HBNB_TYPE_STORAGE", "fs")
+import os
+from datetime import datetime
+from models import *
 
 
-class TestBase(unittest.TestCase):
-    '''
-        Testing the base class model.
-    '''
+@unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE', 'fs') == 'db',
+                 "db does not have BaseModel")
+class Test_BaseModel(unittest.TestCase):
+    """
+    Test the base model class
+    """
+
     def setUp(self):
-        '''
-            Initializing instance.
-        '''
-        self.my_model = BaseModel()
-        self.my_model.name = "Binita Rai"
-        self.new = BaseModel()
+        self.model1 = BaseModel()
 
-    def TearDown(self):
-        '''
-            Removing instance.
-        '''
-        del self.my_model
+        test_args = {'created_at': datetime(2017, 2, 10, 2, 6, 55, 258849),
+                     'updated_at': datetime(2017, 2, 10, 2, 6, 55, 258966),
+                     'id': '46458416-e5d5-4985-aa48-a2b369d03d2a',
+                     'name': 'model1'}
+        self.model2 = BaseModel(test_args)
+        self.model2.save()
 
-    def test_id_type(self):
-        '''
-            Checks that the type of the id is string.
-        '''
-        self.assertEqual("<class 'str'>", str(type(self.my_model.id)))
+    def test_instantiation(self):
+        self.assertIsInstance(self.model1, BaseModel)
+        self.assertTrue(hasattr(self.model1, "created_at"))
+        self.assertTrue(hasattr(self.model1, "id"))
+        self.assertFalse(hasattr(self.model1, "updated_at"))
 
-    def test_ids_differ(self):
-        '''
-            Checks that the ids between two instances are different.
-        '''
-        new_model = BaseModel()
-        self.assertNotEqual(new_model.id, self.my_model.id)
+    def test_reinstantiation(self):
+        self.assertIsInstance(self.model2, BaseModel)
+        self.assertEqual(self.model2.id,
+                         '46458416-e5d5-4985-aa48-a2b369d03d2a')
+        self.assertEqual(self.model2.created_at,
+                         datetime(2017, 2, 10, 2, 6, 55, 258849))
 
-    def test_name(self):
-        '''
-            Checks that an attribute can be added.
-        '''
-        self.assertEqual("Binita Rai", self.my_model.name)
-
-    def test_a_updated_created_equal(self):
-        '''
-            Checks that both dates are equal.
-        '''
-        self.assertEqual(self.my_model.updated_at.year,
-                         self.my_model.created_at.year)
-
-    def test_str_overide(self):
-        '''
-            Checks that the right message gets printed.
-        '''
-        backup = sys.stdout
-        inst_id = self.my_model.id
-        capture_out = StringIO()
-        sys.stdout = capture_out
-        print(self.my_model)
-
-        cap = capture_out.getvalue().split(" ")
-        self.assertEqual(cap[0], "[BaseModel]")
-
-        self.assertEqual(cap[1], "({})".format(inst_id))
-        sys.stdout = backup
-
-    def test_to_dict_type(self):
-        '''
-            Checks that the to_dict method return type.
-        '''
-
-        self.assertEqual("<class 'dict'>",
-                         str(type(self.my_model.to_dict())))
-
-    def test_to_dict_class(self):
-        '''
-            Checks that the __class__ key exists.
-        '''
-
-        self.assertEqual("BaseModel", (self.my_model.to_dict())["__class__"])
-
-    def test_to_dict_type_updated_at(self):
-        '''
-            Checks the type of the value of updated_at.
-        '''
-        self.assertEqual("<class 'str'>",
-                         str(type((self.my_model.to_dict())["updated_at"])))
-
-    def test_to_dict_type_created_at(self):
-        '''
-            Checks the type of the value of created_at.
-        '''
-        tmp = self.my_model.to_dict()
-        self.assertEqual("<class 'str'>", str(type(tmp["created_at"])))
-
-    def test_kwargs_instantiation(self):
-        '''
-            Test that an instance is created using the
-            key value pair.
-        '''
-        my_model_dict = self.my_model.to_dict()
-        new_model = BaseModel(**my_model_dict)
-        self.assertEqual(new_model.id, self.my_model.id)
-
-    def test_type_created_at(self):
-        '''
-            Test that the new_model's updated_at
-            data type is datetime.
-        '''
-        my_model_dict = self.my_model.to_dict()
-        new_model = BaseModel(my_model_dict)
-        self.assertTrue(isinstance(new_model.created_at, datetime.datetime))
-
-    def test_type_updated_at(self):
-        '''
-            Test that the new_model's created_at
-            data type is datetime.
-        '''
-        my_model_dict = self.my_model.to_dict()
-        new_model = BaseModel(my_model_dict)
-        self.assertTrue(isinstance(new_model.updated_at, datetime.datetime))
-
-    def test_compare_dict(self):
-        '''
-            Test that the new_model's and my_model's
-            dictionary values are same.
-        '''
-        my_model_dict = self.my_model.to_dict()
-        new_model = BaseModel(**my_model_dict)
-        new_model_dict = new_model.to_dict()
-        self.assertEqual(my_model_dict, new_model_dict)
-
-    def test_instance_diff(self):
-        '''
-            Test that the my_model and new_model are
-            not the same instance.
-        '''
-        my_model_dict = self.my_model.to_dict()
-        new_model = BaseModel(my_model_dict)
-        self.assertNotEqual(self.my_model, new_model)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
     def test_save(self):
-        '''
-            Checks that after updating the instance; the dates differ in the
-            updated_at attribute.
-        '''
-        old_update = self.new.updated_at
-        self.new.save()
-        self.assertNotEqual(self.new.updated_at, old_update)
+        self.assertFalse(hasattr(self.model1, "updated_at"))
+        self.model1.save()
+        self.assertTrue(hasattr(self.model1, "updated_at"))
+        old_time = self.model2.updated_at
+        self.model2.save()
+        self.assertNotEqual(old_time, self.model2.updated_at)
 
-    @unittest.skipIf(storage != "db", "Testing if using DBStorage")
-    def test_basemodel_hasattr(self):
-        '''
-            Checks Class attributes
-        '''
-        self.assertTrue(hasattr(self.new, "id"))
-        self.assertTrue(hasattr(self.new, "created_at"))
-        self.assertTrue(hasattr(self.new, "updated_at"))
+    def test_to_json(self):
+        jsonified = self.model2.to_json()
+        self.assertNotEqual(self.model2.__dict__, jsonified)
+        self.assertNotIsInstance(jsonified["created_at"], datetime)
+        self.assertNotIsInstance(jsonified["updated_at"], datetime)
+        self.assertEqual(jsonified["created_at"], '2017-02-10T02:06:55.258849')
+        self.assertTrue(hasattr(jsonified, "__class__"))
+        self.assertEqual(jsonified["__class__"], "BaseModel")
 
-    @unittest.skipIf(storage != "db", "Testing if using DBStorage")
-    def test_basemodel_attrtype(self):
-        '''
-            Check is attributes type
-        '''
-        new2 = BaseModel
-        self.assertFalse(isinstance(new2.id, str))
-        self.assertFalse(isinstance(new2.created_at, str))
-        self.assertFalse(isinstance(new2.updated_at, str))
+
+if __name__ == "__main__":
+    import sys
+    import os
+    sys.path.insert(1, os.path.join(os.path.split(__file__)[0], '../..'))
+    from models import *
+    unittest.main()

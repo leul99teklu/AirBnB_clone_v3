@@ -1,62 +1,34 @@
-#!/usr/bin/python3
-'''
-    Contain tests for the state module.
-'''
 import unittest
-from models.base_model import BaseModel
-from models.state import State
-from os import getenv, remove
-import pep8
-
-storage = getenv("HBNB_TYPE_STORAGE", "fs")
+from datetime import datetime
+from models import *
 
 
-class TestState(unittest.TestCase):
-    '''
-        Test the State class.
-    '''
+class Test_StateModel(unittest.TestCase):
+    """
+    Test the state model class
+    """
 
-    @classmethod
-    def setUpClass(cls):
-        '''
-            Sets up unittest
-        '''
-        cls.new_state = State()
-        cls.new_state.name = "California"
+    def test_minimal_creation(self):
+        """creating an object with no arguments"""
+        model = State()
+        self.assertTrue(hasattr(model, "name"))
+        self.assertTrue(hasattr(model, "id"))
+        self.assertTrue(hasattr(model, "created_at"))
 
-    @classmethod
-    def tearDownClass(cls):
-        '''
-            Tears down unittest
-        '''
-        del cls.new_state
-        try:
-            remove("file.json")
-        except FileNotFoundError:
-            pass
+    def test_var_initialization(self):
+        """Check default type"""
+        model = State()
+        self.assertIsInstance(model.created_at, datetime)
 
-    def test_States_dbtable(self):
-        '''
-            Check if the tablename is correct
-        '''
-        self.assertEqual(self.new_state.__tablename__, "states")
+    def test_save(self):
+        """Try to save the object to storage"""
+        test_state = {'id': "009",
+                      'created_at': datetime(2017, 2, 12, 00, 31, 55, 331997),
+                      'name': "TEST STATE FOR STATE"}
+        state = State(test_state)
+        state.save()
+        storage.delete(state)
 
-    def test_State_inheritence(self):
-        '''
-            Test that State class inherits from BaseModel.
-        '''
-        self.assertIsInstance(self.new_state, BaseModel)
 
-    def test_State_attributes(self):
-        '''
-            Test that State class contains the attribute `name`.
-        '''
-        self.assertTrue("name" in self.new_state.__dir__())
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_State_attributes_type(self):
-        '''
-            Test that State class attribute name is class type str.
-        '''
-        name = getattr(self.new_state, "name")
-        self.assertIsInstance(name, str)
+if __name__ == "__main__":
+    unittest.main()

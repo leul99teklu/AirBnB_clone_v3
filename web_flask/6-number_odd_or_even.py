@@ -1,74 +1,58 @@
 #!/usr/bin/python3
 """
-script starts Flask web app
-    listen on 0.0.0.0, port 5000
-    routes: /:                    display "Hello HBNB!"
-            /hbnb:                display "HBNB"
-            /c/<text>:            display "C" + text (replace "_" with " ")
-            /python/<text>:       display "Python" + text (default="is cool")
-            /number/<n>:          display "n is a number" only if int
-            /number_template/<n>: display HTML page only if n is int
-            /number_odd_or_even/<n>: display HTML page; display odd/even info
+This is module 6-number_odd_or_even.
+It starts a minimal Flask application.
+Run it with python3 -m 6-number_odd_or_even or ./6-number_odd_or_even
 """
-
-from flask import Flask, render_template
+from flask import Flask
+from flask import render_template
 app = Flask(__name__)
-app.url_map.strict_slashes = False
 
 
 @app.route('/')
 def hello_hbnb():
-    """display text"""
+    """flask hello world"""
     return "Hello HBNB!"
 
 
 @app.route('/hbnb')
 def hbnb():
-    """display text"""
+    """add a path to the url"""
     return "HBNB"
 
 
 @app.route('/c/<text>')
 def c_text(text):
-    """display custom text given"""
-    return "C {}".format(text.replace('_', ' '))
+    """make a simple variable rule"""
+    return "C {}".format(text.replace("_", " "))
 
 
-@app.route('/python')
+@app.route('/python/', defaults={'text': "is cool"})
 @app.route('/python/<text>')
-def python_text(text="is cool"):
-    """display custom text given
-       first route statement ensures it works for:
-          curl -Ls 0.0.0.0:5000/python ; echo "" | cat -e
-          curl -Ls 0.0.0.0:5000/python/ ; echo "" | cat -e
-    """
-    return "Python {}".format(text.replace('_', ' '))
+def python_text(text):
+    """give a rule a default value"""
+    return "Python {}".format(text.replace("_", " "))
 
 
 @app.route('/number/<int:n>')
-def text_if_int(n):
-    """display text only if int given"""
+def number_route(n):
+    """make a rule only take a number"""
     return "{:d} is a number".format(n)
 
 
-@app.route('/number_template/<int:n>')
-def html_if_int(n):
-    """display html page only if int given
-       place given int into html template
-    """
-    return render_template('5-number.html', n=n)
+@app.route('/number_template/<int:number>')
+def number_template(number):
+    """create an html page with a rule"""
+    return render_template('5-number.html', number=number)
 
 
 @app.route('/number_odd_or_even/<int:n>')
-def html_odd_or_even(n):
-    """display html page only if int given
-       place given int into html template
-       substitute text to display if int is odd or even
-    """
-    odd_or_even = "even" if (n % 2 == 0) else "odd"
-    return render_template('6-number_odd_or_even.html',
-                           n=n, odd_or_even=odd_or_even)
+def number_odd_or_even(n):
+    """Create a template with 2 variables"""
+    odd_even = "even" if (n % 2 == 0) else "odd"
+    return render_template("6-number_odd_or_even.html",
+                           number=n, odd_even=odd_even)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port="5000")

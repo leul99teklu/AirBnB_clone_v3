@@ -1,170 +1,125 @@
-#!/usr/bin/python3
-
-'''
-    All the test for the user model are implemented here.
-'''
-
 import unittest
-from models.base_model import BaseModel
-from models.place import Place
-from os import getenv, remove
+import os
+from datetime import datetime
+from models import *
+from models.place import PlaceAmenity
 
-storage = getenv("HBNB_TYPE_STORAGE", "fs")
+
+class Test_PlaceModel(unittest.TestCase):
+    """
+    Test the place model class
+    """
+
+    def test_simple_initialization(self):
+        """initialization without arguments"""
+        model = Place()
+        self.assertTrue(hasattr(model, "id"))
+        self.assertTrue(hasattr(model, "created_at"))
+        self.assertTrue(hasattr(model, "city_id"))
+        self.assertTrue(hasattr(model, "user_id"))
+        self.assertTrue(hasattr(model, "name"))
+        self.assertTrue(hasattr(model, "description"))
+        self.assertTrue(hasattr(model, "number_rooms"))
+        self.assertTrue(hasattr(model, "number_bathrooms"))
+        self.assertTrue(hasattr(model, "max_guest"))
+        self.assertTrue(hasattr(model, "price_by_night"))
+        self.assertTrue(hasattr(model, "latitude"))
+        self.assertTrue(hasattr(model, "longitude"))
+
+    def test_var_initialization(self):
+        """Check default type"""
+        model = Place()
+        self.assertIsInstance(model.created_at, datetime)
+
+    def test_save(self):
+        """saving the object to storage"""
+        test_user = {'id': "001",
+                     'email': "you@g.com",
+                     'password': "1234",
+                     'first_name': "TEST",
+                     'last_name': "REVIEW"}
+        user = User(test_user)
+        test_state = {'id': "002",
+                      'created_at': datetime(2017, 2, 12, 00, 31, 55, 331997),
+                      'name': "TEST STATE FOR CITY"}
+        state = State(test_state)
+        test_city = {'id': "003",
+                     'name': "CITY SET UP",
+                     'state_id': "002"}
+        city = City(test_city)
+        test_place = {'id': "003",
+                      'city_id': "003",
+                      'user_id': "001",
+                      'name': "TEST REVIEW",
+                      'description': "blah blah",
+                      'number_rooms': 4,
+                      'number_bathrooms': 2,
+                      'max_guest': 4,
+                      'price_by_night': 23,
+                      'latitude': 45.5,
+                      'longitude': 23.4}
+        place = Place(test_place)
+        user.save()
+        state.save()
+        city.save()
+        place.save()
+        storage.delete(place)
+        # storage.delete(city) # cascade deletes it
+        storage.delete(user)
+        storage.delete(state)
 
 
-class TestUser(unittest.TestCase):
-    '''
-        Testing Place class
-    def test_pep8_style_check(self):
-            Tests pep8 style
-        style = pep8.StyleGuide(quiet=True)
-        p = style.check_files(['models/places.py'])
-        self.assertEqual(p.total_errors, 0, "pep8 error needs fixing")
+@unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE', 'fs') != 'db', "db")
+class Test_PlaceAmenityModel(unittest.TestCase):
+    """
+    Test the place amenity model class
+    """
 
-    '''
+    def test_save(self):
+        """creates and save a PlaceAmenity object"""
+        test_user = {'id': "002",
+                     'email': "you@g.com",
+                     'password': "1234",
+                     'first_name': "TEST",
+                     'last_name': "REVIEW"}
+        user = User(**test_user)
+        test_state = {'id': "001",
+                      'created_at': datetime(2017, 2, 12, 00, 31, 55, 331997),
+                      'name': "TEST STATE FOR CITY"}
+        state = State(**test_state)
+        test_city = {'id': "005",
+                     'name': "CITY SET UP",
+                     'state_id': "001"}
+        city = City(**test_city)
+        test_place = {'id': "002",
+                      'city_id': "005",
+                      'user_id': "002",
+                      'name': "TEST REVIEW",
+                      'description': "blah blah",
+                      'number_rooms': 4,
+                      'number_bathrooms': 2,
+                      'max_guest': 4,
+                      'price_by_night': 23,
+                      'latitude': 45.5,
+                      'longitude': 23.4}
+        place = Place(**test_place)
+        test_amenity = {'id': "010",
+                        'name': "TEST place_amenities"}
+        amenity = Amenity(**test_amenity)
+        pla = PlaceAmenity(place_id="002", amenity_id="010")
+        user.save()
+        state.save()
+        city.save()
+        place.save()
+        amenity.save()
+        storage._DBStorage__session.add(pla)
+        tmp = storage._DBStorage__session.query(PlaceAmenity).one()
+        storage._DBStorage__session.delete(tmp)
+        # storage.delete(amenity) ???, foreign key constraint on empty set
+        # storage.delete(place)
+        # storage.delete(user)
+        # storage.delete(state)
 
-    @classmethod
-    def setUpClass(cls):
-        '''
-            Sets up unittest
-        '''
-        cls.new_place = Place(city_id="0O01", user_id="0O02", name="house",
-                              description="awesome", number_rooms=3,
-                              number_bathrooms=2, max_guest=1,
-                              price_by_night=100, latitude=37.77,
-                              longitude=127.12)
 
-    @classmethod
-    def tearDownClass(cls):
-        '''
-            Tears down unittest
-        '''
-        del cls.new_place
-        try:
-            remove("file.json")
-        except FileNotFoundError:
-            pass
-
-    def test_Place_dbtable(self):
-        '''
-            Check if the tablename is correct
-        '''
-        self.assertEqual(self.new_place.__tablename__, "places")
-
-    def test_Place_inheritance(self):
-        '''
-            tests that the City class Inherits from BaseModel
-        '''
-
-        self.assertIsInstance(self.new_place, BaseModel)
-
-    def test_Place_attributes(self):
-        '''
-            Checks that the attribute exist.
-        '''
-        self.assertTrue("city_id" in self.new_place.__dir__())
-        self.assertTrue("user_id" in self.new_place.__dir__())
-        self.assertTrue("description" in self.new_place.__dir__())
-        self.assertTrue("name" in self.new_place.__dir__())
-        self.assertTrue("number_rooms" in self.new_place.__dir__())
-        self.assertTrue("max_guest" in self.new_place.__dir__())
-        self.assertTrue("price_by_night" in self.new_place.__dir__())
-        self.assertTrue("latitude" in self.new_place.__dir__())
-        self.assertTrue("longitude" in self.new_place.__dir__())
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_place_amenity_attrb(self):
-        self.assertTrue("amenity_ids" in self.new_place.__dir__())
-
-    @unittest.skipIf(storage != "db", "Testing database storage only")
-    def test_place_amenity_dbattrb(self):
-        self.assertTrue("amenities" in self.new_place.__dir__())
-        self.assertTrue("reviews" in self.new_place.__dir__())
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_longitude(self):
-        '''
-            Test the type of longitude.
-        '''
-        longitude = getattr(self.new_place, "longitude")
-        self.assertIsInstance(longitude, float)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_latitude(self):
-        '''
-            Test the type of latitude
-        '''
-        latitude = getattr(self.new_place, "latitude")
-        self.assertIsInstance(latitude, float)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_amenity(self):
-        '''
-            Test the type of latitude
-        '''
-        amenity = getattr(self.new_place, "amenity_ids")
-        self.assertIsInstance(amenity, list)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_price_by_night(self):
-        '''
-            Test the type of price_by_night
-        '''
-        price_by_night = getattr(self.new_place, "price_by_night")
-        self.assertIsInstance(price_by_night, int)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_max_guest(self):
-        '''
-            Test the type of max_guest
-        '''
-        max_guest = getattr(self.new_place, "max_guest")
-        self.assertIsInstance(max_guest, int)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_number_bathrooms(self):
-        '''
-            Test the type of number_bathrooms
-        '''
-        number_bathrooms = getattr(self.new_place, "number_bathrooms")
-        self.assertIsInstance(number_bathrooms, int)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_number_rooms(self):
-        '''
-            Test the type of number_bathrooms
-        '''
-        number_rooms = getattr(self.new_place, "number_rooms")
-        self.assertIsInstance(number_rooms, int)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_description(self):
-        '''
-            Test the type of description
-        '''
-        description = getattr(self.new_place, "description")
-        self.assertIsInstance(description, str)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_name(self):
-        '''
-            Test the type of name
-        '''
-        name = getattr(self.new_place, "name")
-        self.assertIsInstance(name, str)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_user_id(self):
-        '''
-            Test the type of user_id
-        '''
-        user_id = getattr(self.new_place, "user_id")
-        self.assertIsInstance(user_id, str)
-
-    @unittest.skipIf(storage == "db", "Testing database storage only")
-    def test_type_city_id(self):
-        '''
-            Test the type of city_id
-        '''
-        city_id = getattr(self.new_place, "city_id")
-        self.assertIsInstance(city_id, str)
+if __name__ == "__main__":
+    unittest.main()

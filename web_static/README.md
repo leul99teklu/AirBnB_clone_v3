@@ -1,7 +1,5 @@
-# Synopsis
+## Static website
 
-Creating a static page to use later as a template for the Hbnb project.
-
-```8-index.html``` contains the temporary final result that looks like this:
-
-![Result](/web_static/images/Final.png)
+This folder contains the static website built for the project. It is done in `CSS` and `HTML`.
+It doubles as an introduction to those languages.  
+For all the questions, we were given a screenshot and some specific parameters, and we had to match the screenshot.  
